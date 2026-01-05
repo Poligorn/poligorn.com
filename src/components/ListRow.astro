@@ -1,0 +1,138 @@
+---
+import type { Lang } from '../i18n/strings';
+import type { I18nText } from '../i18n/strings';
+import { t } from '../i18n/strings';
+
+type Kind = 'project' | 'link';
+
+const {
+	kind,
+	title,
+	description,
+	href,
+	meta,
+	badge,
+	lang,
+} = Astro.props as {
+	kind: Kind;
+	title: string;
+	description: I18nText;
+	href?: string;
+	meta?: string;
+	badge?: string;
+	lang: Lang;
+};
+
+const isLink = Boolean(href);
+---
+
+<div class="row">
+	<span class={`pill pill--${kind}`}>{kind}</span>
+
+	<div class="row__body">
+		<div class="row__top">
+			{isLink ? (
+				<a class="row__title" href={href} target={href?.startsWith('http') ? '_blank' : undefined} rel="noreferrer noopener">
+					{title}
+				</a>
+			) : (
+				<span class="row__title">{title}</span>
+			)}
+			{badge ? <span class="row__badge">{badge}</span> : null}
+		</div>
+
+		<div class="row__bottom">
+			<span class="row__desc">{t(description, lang)}</span>
+			{meta ? <span class="row__meta">{meta}</span> : null}
+		</div>
+	</div>
+</div>
+
+<style>
+	.row {
+		display: grid;
+		grid-template-columns: auto 1fr;
+		gap: 14px;
+		align-items: start;
+		padding: 12px 0;
+		border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+	}
+
+	.pill {
+		height: 26px;
+		display: inline-flex;
+		align-items: center;
+		padding: 0 10px;
+		border-radius: 999px;
+		font-size: 12px;
+		letter-spacing: 0.08em;
+		text-transform: uppercase;
+		border: 1px solid rgba(255, 255, 255, 0.14);
+		color: rgba(255, 255, 255, 0.78);
+		background: rgba(255, 255, 255, 0.02);
+	}
+
+	.pill--project {
+		border-color: rgba(130, 190, 255, 0.25);
+		color: rgba(200, 225, 255, 0.82);
+	}
+
+	.pill--link {
+		border-color: rgba(255, 255, 255, 0.14);
+		color: rgba(255, 255, 255, 0.78);
+	}
+
+	.row__top {
+		display: flex;
+		align-items: baseline;
+		gap: 10px;
+		flex-wrap: wrap;
+	}
+
+	.row__title {
+		font-weight: 600;
+		letter-spacing: 0.01em;
+		text-decoration: none;
+		color: rgba(255, 255, 255, 0.92);
+	}
+
+	.row__title:hover {
+		text-decoration: underline;
+		text-decoration-color: rgba(255, 255, 255, 0.35);
+		text-underline-offset: 4px;
+	}
+
+	.row__title:focus-visible {
+		outline: 2px solid rgba(130, 190, 255, 0.9);
+		outline-offset: 3px;
+		border-radius: 10px;
+	}
+
+	.row__badge {
+		font-size: 12px;
+		color: rgba(255, 255, 255, 0.58);
+	}
+
+	.row__bottom {
+		display: flex;
+		align-items: baseline;
+		justify-content: space-between;
+		gap: 12px;
+		margin-top: 6px;
+		flex-wrap: wrap;
+	}
+
+	.row__desc {
+		color: rgba(255, 255, 255, 0.72);
+		max-width: 78ch;
+	}
+
+	.row__meta {
+		color: rgba(255, 255, 255, 0.52);
+		font-size: 14px;
+		white-space: nowrap;
+	}
+</style>
+
+
+

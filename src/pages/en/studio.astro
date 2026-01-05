@@ -1,0 +1,43 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { UI, t } from '../../i18n/strings';
+import TileCard from '../../components/TileCard.astro';
+
+const lang = 'en' as const;
+---
+
+<BaseLayout lang={lang} title={t(UI.sections.tea, lang)}>
+	<section class="grid" aria-label="Tea Agency Games">
+		<TileCard
+			kind="studio"
+			title="Tea Agency Games"
+			description={{ en: 'We make games at the intersection of comfort and anxiety.', ru: 'Мы делаем игры на стыке комфорта и тревожности.' }}
+			href="https://tea-agency.itch.io/"
+			meta="itch.io"
+			lang={lang}
+		/>
+
+		<TileCard
+			kind="project"
+			title="Rouletum"
+			description={{
+				en: 'Balatro-like game based on roulette and the use of mystical powers to tilt the odds in your favor.',
+				ru: 'Balatro-like на базе рулетки и мистических сил, чтобы склонять удачу в свою пользу.',
+			}}
+			href="https://store.steampowered.com/app/3344350/Rouletum/"
+			meta="Steam"
+			lang={lang}
+		/>
+	</section>
+
+	<style>
+		.grid {
+			margin-top: 18px;
+			display: grid;
+			grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+			gap: 0;
+		}
+	</style>
+</BaseLayout>
+
+

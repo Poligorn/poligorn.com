@@ -1,0 +1,35 @@
+---
+import { DEFAULT_LANG } from '../utils/lang';
+---
+
+<html lang={DEFAULT_LANG}>
+	<head>
+		<meta charset="utf-8" />
+		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<meta name="generator" content={Astro.generator} />
+		<title>Poligorn</title>
+		<meta http-equiv="refresh" content={`0;url=/${DEFAULT_LANG}/`} />
+	</head>
+	<body>
+		<noscript>
+			<p>
+				<a href="/en/">English</a> · <a href="/ru/">Русский</a>
+			</p>
+		</noscript>
+		<script is:inline>
+			(() => {
+				const DEFAULT = 'en';
+				const key = 'poligorn_lang';
+
+				const saved = localStorage.getItem(key);
+				const nav = (navigator.language || '').toLowerCase();
+				const preferred = saved || (nav.startsWith('ru') ? 'ru' : DEFAULT);
+				const next = preferred === 'ru' ? 'ru' : DEFAULT;
+
+				// if we're already at /, go to /{lang}/
+				location.replace('/' + next + '/');
+			})();
+		</script>
+	</body>
+</html>

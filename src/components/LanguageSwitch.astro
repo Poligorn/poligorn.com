@@ -1,0 +1,47 @@
+---
+import type { Lang } from '../i18n/strings';
+import { UI, t } from '../i18n/strings';
+import { swapLangInPathname } from '../utils/lang';
+
+const lang = Astro.props.lang as Lang;
+const pathname = Astro.url.pathname;
+const otherLang: Lang = lang === 'ru' ? 'en' : 'ru';
+const href = swapLangInPathname(pathname, otherLang);
+---
+
+<a
+	class="lang"
+	href={href}
+	data-lang={otherLang}
+	onclick={`try{localStorage.setItem('poligorn_lang','${otherLang}')}catch(e){}`}
+>
+	{otherLang === 'ru' ? t(UI.lang.switchToRu, lang) : t(UI.lang.switchToEn, lang)}
+</a>
+
+<style>
+	.lang {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		height: 40px;
+		padding: 0 12px;
+		border: 1px solid rgba(255, 255, 255, 0.16);
+		border-radius: 10px;
+		color: rgba(255, 255, 255, 0.92);
+		text-decoration: none;
+		font-size: 14px;
+		line-height: 1;
+		letter-spacing: 0.01em;
+	}
+
+	.lang:hover {
+		border-color: rgba(255, 255, 255, 0.28);
+	}
+
+	.lang:focus-visible {
+		outline: 2px solid rgba(130, 190, 255, 0.9);
+		outline-offset: 2px;
+	}
+</style>
+
+

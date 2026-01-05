@@ -1,0 +1,46 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { UI, t } from '../../i18n/strings';
+import { SOCIAL_LINKS } from '../../content/socials';
+import TileStack2 from '../../components/TileStack2.astro';
+
+const lang = 'ru' as const;
+const socialPairs = Array.from({ length: Math.ceil(SOCIAL_LINKS.length / 2) }, (_, i) => [
+	SOCIAL_LINKS[i * 2],
+	SOCIAL_LINKS[i * 2 + 1],
+]).filter((pair) => pair[0]);
+---
+
+<BaseLayout lang={lang} title={t(UI.sections.social, lang)}>
+	<section class="grid" aria-label="Социальные ссылки">
+		{socialPairs.map(([a, b]) => (
+			<TileStack2
+				class="socialStack"
+				top={{ title: t(a.label, lang), description: { ru: 'Внешняя ссылка', en: 'External link' }, href: a.href, icon: a.key }}
+				bottom={
+					b
+						? { title: t(b.label, lang), description: { ru: 'Внешняя ссылка', en: 'External link' }, href: b.href, icon: b.key }
+						: undefined
+				}
+				lang={lang}
+			/>
+		))}
+	</section>
+
+	<style>
+		.grid {
+			margin-top: 18px;
+			display: grid;
+			grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+			gap: 0;
+		}
+
+		@media (min-width: 560px) and (max-width: 899px) {
+			.grid :global(.socialStack) {
+				grid-column: 2;
+			}
+		}
+	</style>
+</BaseLayout>
+
+

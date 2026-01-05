@@ -1,0 +1,380 @@
+---
+import type { Lang } from '../i18n/strings';
+import { UI, t } from '../i18n/strings';
+import type { Workplace } from '../content/workplaces';
+
+const { workplaces, lang, class: className } = Astro.props as {
+	workplaces: Workplace[];
+	lang: Lang;
+	class?: string;
+};
+
+// Функция для вычисления длительности между датами
+function calculateDuration(start: Date, end: Date | null): { years: number; months: number } {
+	const endDate = end || new Date();
+	const years = endDate.getFullYear() - start.getFullYear();
+	const months = endDate.getMonth() - start.getMonth();
+	
+	let totalMonths = years * 12 + months;
+	if (endDate.getDate() < start.getDate()) {
+		totalMonths--;
+	}
+	
+	return {
+		years: Math.floor(totalMonths / 12),
+		months: totalMonths % 12,
+	};
+}
+---
+
+<article class={`timeline${className ? ` ${className}` : ''}`} data-timeline>
+	<span class="pill">career</span>
+	
+	<div class="timeline__container">
+		<!-- Верхняя линия - детали выбранного места работы (неинтерактивная) -->
+		<div class="timeline__detail" id="timeline-detail" aria-live="polite">
+			<div class="timeline__detailLine">
+				<div class="timeline__detailStart">
+					<div class="timeline__dot timeline__dot--detail"></div>
+					<span class="timeline__date" id="detail-start-date"></span>
+				</div>
+				<div class="timeline__detailDuration" id="detail-duration"></div>
+				<div class="timeline__detailEnd">
+					<div class="timeline__dot timeline__dot--detail"></div>
+					<span class="timeline__date" id="detail-end-date"></span>
+				</div>
+			</div>
+		</div>
+
+		<!-- Нижняя линия - все места работы (интерактивная) -->
+		<div class="timeline__interactive" role="group" aria-label={t(UI.timeline.career, lang)} data-timeline-interactive>
+			<div class="timeline__line"></div>
+			{workplaces.map((workplace, index) => {
+				const duration = calculateDuration(workplace.startDate, workplace.endDate);
+				const isSelected = index === 0; // По умолчанию выбираем первое место работы
+				
+				return (
+					<button
+						class={`timeline__point ${isSelected ? 'timeline__point--active' : ''}`}
+						type="button"
+						data-workplace-id={workplace.id}
+						data-start-date={workplace.startDate.toISOString()}
+						data-end-date={workplace.endDate?.toISOString() || ''}
+						data-duration-years={duration.years}
+						data-duration-months={duration.months}
+						aria-label={`${t(workplace.company, lang)}${workplace.role ? `, ${t(workplace.role, lang)}` : ''}`}
+						aria-pressed={isSelected}
+					>
+						<span class="timeline__pointDot"></span>
+						<span class="timeline__pointLabel">{t(workplace.company, lang)}</span>
+					</button>
+				);
+			})}
+		</div>
+	</div>
+</article>
+
+<script>
+	(() => {
+		const timeline = document.querySelector('[data-timeline]');
+		if (!timeline) return;
+
+		const detailStartDate = document.getElementById('detail-start-date');
+		const detailEndDate = document.getElementById('detail-end-date');
+		const detailDuration = document.getElementById('detail-duration');
+		const interactiveLine = timeline.querySelector('[data-timeline-interactive]') as HTMLElement;
+		const points = timeline.querySelectorAll('[data-workplace-id]') as NodeListOf<HTMLButtonElement>;
+
+		if (!detailStartDate || !detailEndDate || !detailDuration || !interactiveLine) return;
+
+		const lang = timeline.closest('html')?.lang || 'ru';
+		const isRu = lang === 'ru';
+
+		// Вычисляем временной диапазон для позиционирования точек
+		const startDates = Array.from(points).map((p) => new Date(p.getAttribute('data-start-date') || ''));
+		const endDates = Array.from(points).map((p) => {
+			const endDateStr = p.getAttribute('data-end-date');
+			return endDateStr ? new Date(endDateStr) : new Date(); // Если нет даты окончания, используем текущую дату
+		});
+		
+		const minDate = new Date(Math.min(...startDates.map((d) => d.getTime())));
+		const maxDate = new Date(Math.max(...endDates.map((d) => d.getTime())));
+		
+		const totalRange = maxDate.getTime() - minDate.getTime();
+
+		// Позиционируем точки пропорционально времени
+		points.forEach((point) => {
+			const startDateStr = point.getAttribute('data-start-date');
+			if (!startDateStr) return;
+
+			const startDate = new Date(startDateStr);
+			const position = ((startDate.getTime() - minDate.getTime()) / totalRange) * 100;
+			
+			// Ограничиваем позицию от 5% до 95% для отступов
+			const clampedPosition = Math.max(5, Math.min(95, position));
+			point.style.left = `${clampedPosition}%`;
+			point.style.transform = 'translateX(-50%)';
+		});
+
+		function formatDate(date: Date): string {
+			return new Intl.DateTimeFormat(isRu ? 'ru-RU' : 'en-US', {
+				month: 'short',
+				year: 'numeric',
+			}).format(date);
+		}
+
+		function formatDuration(years: number, months: number): string {
+			const parts: string[] = [];
+			if (years > 0) {
+				parts.push(`${years} ${years === 1 ? (isRu ? 'год' : 'y') : (isRu ? 'лет' : 'y')}`);
+			}
+			if (months > 0) {
+				parts.push(`${months} ${isRu ? 'мес.' : 'mo'}`);
+			}
+			return parts.join(' ') || `1 ${isRu ? 'мес.' : 'mo'}`;
+		}
+
+		function updateDetail(button: HTMLButtonElement) {
+			const startDateStr = button.getAttribute('data-start-date');
+			const endDateStr = button.getAttribute('data-end-date');
+			const durationYears = parseInt(button.getAttribute('data-duration-years') || '0', 10);
+			const durationMonths = parseInt(button.getAttribute('data-duration-months') || '0', 10);
+
+			if (!startDateStr) return;
+
+			const startDate = new Date(startDateStr);
+			detailStartDate.textContent = formatDate(startDate);
+
+			if (endDateStr) {
+				const endDate = new Date(endDateStr);
+				detailEndDate.textContent = formatDate(endDate);
+			} else {
+				detailEndDate.textContent = isRu ? 'по настоящее время' : 'present';
+			}
+
+			detailDuration.textContent = formatDuration(durationYears, durationMonths);
+
+			// Обновляем активное состояние
+			points.forEach((p) => {
+				p.classList.remove('timeline__point--active');
+				p.setAttribute('aria-pressed', 'false');
+			});
+			button.classList.add('timeline__point--active');
+			button.setAttribute('aria-pressed', 'true');
+		}
+
+		// Инициализация с первым местом работы
+		const firstPoint = points[0];
+		if (firstPoint) {
+			updateDetail(firstPoint);
+		}
+
+		// Обработчики кликов
+		points.forEach((point) => {
+			point.addEventListener('click', () => {
+				updateDetail(point);
+			});
+
+			point.addEventListener('keydown', (e) => {
+				if (e.key === 'Enter' || e.key === ' ') {
+					e.preventDefault();
+					updateDetail(point);
+				}
+			});
+		});
+	})();
+</script>
+
+<style>
+	.timeline {
+		min-height: 220px;
+		padding: 18px 18px 16px;
+		border: 1px solid rgba(255, 255, 255, 0.08);
+		background: rgba(0, 0, 0, 0);
+		display: flex;
+		flex-direction: column;
+		gap: 16px;
+	}
+
+	.pill {
+		align-self: flex-start;
+		display: inline-flex;
+		align-items: center;
+		height: 22px;
+		padding: 0 10px;
+		border-radius: 6px;
+		font-size: 12px;
+		letter-spacing: 0.08em;
+		text-transform: uppercase;
+		font-weight: 600;
+		border: 1px solid rgba(110, 255, 170, 0.18);
+		background: rgba(110, 255, 170, 0.06);
+		color: rgba(185, 255, 220, 0.86);
+	}
+
+	.timeline__container {
+		display: flex;
+		flex-direction: column;
+		gap: 24px;
+	}
+
+	/* Детальная линия (верхняя, неинтерактивная) */
+	.timeline__detail {
+		position: relative;
+		padding: 12px 0;
+	}
+
+	.timeline__detailLine {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 12px;
+		position: relative;
+	}
+
+	.timeline__detailStart,
+	.timeline__detailEnd {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 8px;
+		flex: 0 0 auto;
+	}
+
+	.timeline__detailDuration {
+		flex: 1;
+		text-align: center;
+		color: rgba(255, 255, 255, 0.7);
+		font-size: 14px;
+		font-weight: 500;
+		padding: 0 8px;
+	}
+
+	.timeline__dot {
+		width: 10px;
+		height: 10px;
+		border-radius: 50%;
+		background: rgba(255, 255, 255, 0.4);
+		border: 2px solid rgba(255, 255, 255, 0.2);
+		flex-shrink: 0;
+	}
+
+	.timeline__dot--detail {
+		width: 12px;
+		height: 12px;
+		background: rgba(110, 255, 170, 0.8);
+		border-color: rgba(110, 255, 170, 0.4);
+	}
+
+	.timeline__date {
+		font-size: 13px;
+		color: rgba(255, 255, 255, 0.6);
+		white-space: nowrap;
+	}
+
+	/* Интерактивная линия (нижняя) */
+	.timeline__interactive {
+		position: relative;
+		padding: 12px 0 40px;
+		min-height: 60px;
+	}
+
+	.timeline__line {
+		position: absolute;
+		left: 0;
+		right: 0;
+		top: 50%;
+		height: 1px;
+		background: rgba(255, 255, 255, 0.12);
+		transform: translateY(-50%);
+		z-index: 0;
+	}
+
+	.timeline__point {
+		position: absolute;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 8px;
+		background: none;
+		border: none;
+		padding: 0;
+		cursor: pointer;
+		color: inherit;
+		font-family: inherit;
+		min-width: 60px;
+		transition: opacity 0.15s ease;
+		top: 50%;
+		z-index: 1;
+	}
+
+	.timeline__point:hover {
+		opacity: 0.8;
+	}
+
+	.timeline__point:focus-visible {
+		outline: 2px solid rgba(130, 190, 255, 0.9);
+		outline-offset: 4px;
+		border-radius: 8px;
+	}
+
+	.timeline__pointDot {
+		width: 10px;
+		height: 10px;
+		border-radius: 50%;
+		background: rgba(255, 255, 255, 0.3);
+		border: 2px solid rgba(255, 255, 255, 0.15);
+		transition: all 0.2s ease;
+		position: relative;
+		z-index: 1;
+	}
+
+	.timeline__point:hover .timeline__pointDot {
+		background: rgba(255, 255, 255, 0.5);
+		border-color: rgba(255, 255, 255, 0.3);
+		transform: scale(1.2);
+	}
+
+	.timeline__point--active .timeline__pointDot {
+		background: rgba(110, 255, 170, 0.9);
+		border-color: rgba(110, 255, 170, 0.5);
+		width: 12px;
+		height: 12px;
+		box-shadow: 0 0 0 4px rgba(110, 255, 170, 0.1);
+	}
+
+	.timeline__pointLabel {
+		font-size: 12px;
+		color: rgba(255, 255, 255, 0.6);
+		text-align: center;
+		white-space: nowrap;
+		max-width: 100px;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		transition: color 0.2s ease;
+	}
+
+	.timeline__point:hover .timeline__pointLabel {
+		color: rgba(255, 255, 255, 0.8);
+	}
+
+	.timeline__point--active .timeline__pointLabel {
+		color: rgba(185, 255, 220, 0.9);
+		font-weight: 500;
+	}
+
+
+	@media (min-width: 900px) {
+		.timeline {
+			padding: 22px 22px 18px;
+		}
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.timeline__pointDot,
+		.timeline__pointLabel {
+			transition: none;
+		}
+	}
+</style>
+

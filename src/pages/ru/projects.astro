@@ -1,0 +1,44 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { UI, t } from '../../i18n/strings';
+import { PROJECTS } from '../../content/projects';
+import TileCard from '../../components/TileCard.astro';
+
+const lang = 'ru' as const;
+const personalProjects = PROJECTS.filter((p) => p.origin !== 'tea-agency');
+---
+
+<BaseLayout lang={lang} title={t(UI.sections.projects, lang)}>
+	<section class="grid" aria-label="Личные проекты">
+		{personalProjects.length === 0 ? (
+			<TileCard
+				kind="project"
+				title="Скоро"
+				description={{ ru: 'Добавь сюда личные Itch.io проекты типизированным списком.', en: 'Add your personal Itch.io projects here as a typed list.' }}
+				lang={lang}
+			/>
+		) : (
+			personalProjects.map((p) => (
+				<TileCard
+					kind="project"
+					title={p.title}
+					description={p.summary}
+					href={p.links[0]?.href}
+					meta={p.tags?.[0]}
+					lang={lang}
+				/>
+			))
+		)}
+	</section>
+
+	<style>
+		.grid {
+			margin-top: 18px;
+			display: grid;
+			grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+			gap: 0;
+		}
+	</style>
+</BaseLayout>
+
+

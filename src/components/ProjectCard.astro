@@ -1,0 +1,135 @@
+---
+import type { Lang } from '../i18n/strings';
+import type { Project } from '../content/projects';
+import { t } from '../i18n/strings';
+
+const { project, lang } = Astro.props as { project: Project; lang: Lang };
+const primaryLink = project.links[0];
+const tags = project.tags ?? [];
+const platforms = project.platforms ?? [];
+---
+
+<article class="card">
+	<div class="card__head">
+		<h3 class="card__title">{project.title}</h3>
+		{project.year ? <span class="card__meta">{project.year}</span> : null}
+	</div>
+
+	<p class="card__summary">{t(project.summary, lang)}</p>
+
+	{tags.length || platforms.length ? (
+		<div class="card__chips" aria-label="Meta">
+			{tags.slice(0, 2).map((tag) => (
+				<span class="chip">{tag}</span>
+			))}
+			{platforms.includes('Browser') ? <span class="chip chip--soft">Browser</span> : null}
+		</div>
+	) : null}
+
+	<div class="card__foot">
+		<span class="badge">{project.origin === 'tea-agency' ? 'Tea Agency' : project.origin}</span>
+		{primaryLink ? (
+			<a class="link" href={primaryLink.href} target="_blank" rel="noreferrer noopener">
+				{lang === 'ru' ? 'Открыть' : 'Open'}
+			</a>
+		) : null}
+	</div>
+</article>
+
+<style>
+	.card {
+		border: 1px solid rgba(255, 255, 255, 0.12);
+		border-radius: 14px;
+		padding: 14px;
+		background: rgba(255, 255, 255, 0.03);
+		min-height: 168px;
+		display: flex;
+		flex-direction: column;
+	}
+
+	.card__head {
+		display: flex;
+		justify-content: space-between;
+		gap: 10px;
+		align-items: baseline;
+	}
+
+	.card__title {
+		margin: 0;
+		font-size: 16px;
+		letter-spacing: 0.01em;
+	}
+
+	.card__meta {
+		margin: 0;
+		color: rgba(255, 255, 255, 0.62);
+		font-size: 14px;
+	}
+
+	.card__summary {
+		margin: 10px 0 0;
+		color: rgba(255, 255, 255, 0.78);
+	}
+
+	.card__chips {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 8px;
+		margin-top: 12px;
+	}
+
+	.chip {
+		font-size: 12px;
+		color: rgba(255, 255, 255, 0.72);
+		border: 1px solid rgba(255, 255, 255, 0.12);
+		padding: 6px 8px;
+		border-radius: 999px;
+		background: rgba(255, 255, 255, 0.02);
+	}
+
+	.chip--soft {
+		border-color: rgba(130, 190, 255, 0.22);
+		color: rgba(200, 225, 255, 0.76);
+	}
+
+	.card__foot {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 10px;
+		margin-top: auto;
+		padding-top: 14px;
+	}
+
+	.badge {
+		font-size: 12px;
+		letter-spacing: 0.06em;
+		text-transform: uppercase;
+		color: rgba(255, 255, 255, 0.7);
+		border: 1px solid rgba(255, 255, 255, 0.14);
+		padding: 6px 8px;
+		border-radius: 999px;
+		background: rgba(255, 255, 255, 0.02);
+	}
+
+	.link {
+		color: rgba(255, 255, 255, 0.86);
+		text-decoration: none;
+		padding: 8px 10px;
+		border-radius: 10px;
+		border: 1px solid rgba(255, 255, 255, 0.12);
+		background: rgba(255, 255, 255, 0.03);
+	}
+
+	.link:hover {
+		border-color: rgba(255, 255, 255, 0.24);
+	}
+
+	.link:focus-visible {
+		outline: 2px solid rgba(130, 190, 255, 0.9);
+		outline-offset: 2px;
+	}
+</style>
+
+
+

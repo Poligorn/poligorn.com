@@ -1,0 +1,163 @@
+---
+import type { Lang, I18nText } from '../i18n/strings';
+import { t } from '../i18n/strings';
+import PlatformIcon from './PlatformIcon.astro';
+
+export type TileKind = 'project' | 'studio' | 'acquired' | 'link';
+
+const { kind, title, description, href, meta, lang } = Astro.props as {
+	kind: TileKind;
+	title: string;
+	description: I18nText;
+	href?: string;
+	meta?: string;
+	lang: Lang;
+};
+
+const isExternal = href?.startsWith('http');
+const platform =
+	meta?.toLowerCase() === 'steam' ? ('steam' as const) : meta?.toLowerCase() === 'itch.io' ? ('itch' as const) : null;
+---
+
+<article class="tile">
+	<span class={`pill pill--${kind}`}>
+		{kind === 'project'
+			? 'project'
+			: kind === 'studio'
+				? 'studio'
+				: kind === 'acquired'
+					? 'acquired project'
+					: 'link'}
+	</span>
+
+	{href ? (
+		<a
+			class="tile__title"
+			href={href}
+			target={isExternal ? '_blank' : undefined}
+			rel={isExternal ? 'noreferrer noopener' : undefined}
+		>
+			{title}
+		</a>
+	) : (
+		<div class="tile__title">{title}</div>
+	)}
+
+	<p class="tile__desc">{t(description, lang)}</p>
+
+	{meta ? (
+		<div class="tile__meta">
+			{platform ? <PlatformIcon name={platform} class="tile__metaIcon" /> : null}
+			<span>{meta}</span>
+		</div>
+	) : null}
+</article>
+
+<style>
+	.tile {
+		min-height: 220px;
+		padding: 18px 18px 16px;
+		border: 1px solid rgba(255, 255, 255, 0.08);
+		background: rgba(0, 0, 0, 0);
+		display: flex;
+		flex-direction: column;
+		gap: 10px;
+	}
+
+	.pill {
+		align-self: flex-start;
+		display: inline-flex;
+		align-items: center;
+		height: 22px;
+		padding: 0 10px;
+		border-radius: 6px;
+		font-size: 12px;
+		letter-spacing: 0.08em;
+		text-transform: uppercase;
+		font-weight: 600;
+		border: 1px solid rgba(255, 255, 255, 0.08);
+		background: rgba(255, 255, 255, 0.02);
+		color: rgba(255, 255, 255, 0.7);
+	}
+
+	.pill--project {
+		border-color: rgba(217, 102, 255, 0.25);
+		background: rgba(217, 102, 255, 0.08);
+		color: rgba(255, 210, 255, 0.9);
+	}
+
+	.pill--studio {
+		border-color: rgba(110, 255, 170, 0.18);
+		background: rgba(110, 255, 170, 0.06);
+		color: rgba(185, 255, 220, 0.86);
+	}
+
+	.pill--acquired {
+		border-color: rgba(90, 170, 255, 0.25);
+		background: rgba(90, 170, 255, 0.08);
+		color: rgba(195, 225, 255, 0.9);
+	}
+
+	.pill--link {
+		border-color: rgba(110, 255, 170, 0.18);
+		background: rgba(110, 255, 170, 0.06);
+		color: rgba(185, 255, 220, 0.86);
+	}
+
+	.tile__title {
+		font-size: 28px;
+		line-height: 1.12;
+		letter-spacing: -0.02em;
+		color: rgba(255, 255, 255, 0.92);
+		text-decoration: none;
+		font-weight: 650;
+	}
+
+	a.tile__title:hover {
+		text-decoration: underline;
+		text-decoration-color: rgba(255, 255, 255, 0.25);
+		text-underline-offset: 6px;
+	}
+
+	a.tile__title:focus-visible {
+		outline: 2px solid rgba(130, 190, 255, 0.9);
+		outline-offset: 4px;
+		border-radius: 10px;
+	}
+
+	.tile__desc {
+		margin: 0;
+		color: rgba(255, 255, 255, 0.62);
+		font-size: 15px;
+		line-height: 1.55;
+		max-width: 60ch;
+	}
+
+	.tile__meta {
+		margin-top: auto;
+		color: rgba(255, 255, 255, 0.4);
+		font-size: 14px;
+		display: inline-flex;
+		align-items: center;
+		gap: 8px;
+	}
+
+	.tile__metaIcon {
+		width: 18px;
+		height: 18px;
+		opacity: 0.4;
+		flex: 0 0 auto;
+	}
+
+	@media (min-width: 900px) {
+		.tile {
+			padding: 22px 22px 18px;
+		}
+
+		.tile__title {
+			font-size: 30px;
+		}
+	}
+</style>
+
+

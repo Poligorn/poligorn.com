@@ -1,0 +1,126 @@
+---
+import type { Lang, I18nText } from '../i18n/strings';
+import { t } from '../i18n/strings';
+import SocialIcon from './SocialIcon.astro';
+import type { SocialKey } from '../content/socials';
+
+type StackItem = {
+	title: string;
+	description: I18nText;
+	href: string;
+	icon?: SocialKey;
+};
+
+const { top, bottom, lang } = Astro.props as { top: StackItem; bottom?: StackItem; lang: Lang };
+const className = (Astro.props as { class?: string }).class;
+---
+
+<div class={`stack${className ? ` ${className}` : ''}`} role="group" aria-label="Links">
+	<a class="item" href={top.href} target="_blank" rel="noreferrer noopener">
+		<span class="pill">link</span>
+		<span class="titleRow">
+			{top.icon ? <SocialIcon name={top.icon} class="icon" /> : null}
+			<span class="title">{top.title}</span>
+		</span>
+		<span class="desc">{t(top.description, lang)}</span>
+	</a>
+
+	{bottom ? (
+		<a class="item item--bottom" href={bottom.href} target="_blank" rel="noreferrer noopener">
+			<span class="pill">link</span>
+			<span class="titleRow">
+				{bottom.icon ? <SocialIcon name={bottom.icon} class="icon" /> : null}
+				<span class="title">{bottom.title}</span>
+			</span>
+			<span class="desc">{t(bottom.description, lang)}</span>
+		</a>
+	) : null}
+</div>
+
+<style>
+	.stack {
+		min-height: 220px;
+		border: 1px solid rgba(255, 255, 255, 0.08);
+		display: grid;
+		grid-template-rows: 1fr 1fr;
+	}
+
+	.item {
+		display: flex;
+		flex-direction: column;
+		gap: 10px;
+		padding: 18px 18px 16px;
+		text-decoration: none;
+		color: inherit;
+	}
+
+	.item:hover .title {
+		text-decoration: underline;
+		text-decoration-color: rgba(255, 255, 255, 0.25);
+		text-underline-offset: 6px;
+	}
+
+	.item:focus-visible {
+		outline: 2px solid rgba(130, 190, 255, 0.9);
+		outline-offset: 3px;
+	}
+
+	.item--bottom {
+		border-top: 1px solid rgba(255, 255, 255, 0.08);
+	}
+
+	.pill {
+		align-self: flex-start;
+		display: inline-flex;
+		align-items: center;
+		height: 22px;
+		padding: 0 10px;
+		border-radius: 6px;
+		font-size: 12px;
+		letter-spacing: 0.08em;
+		text-transform: uppercase;
+		font-weight: 600;
+		border: 1px solid rgba(110, 255, 170, 0.18);
+		background: rgba(110, 255, 170, 0.06);
+		color: rgba(185, 255, 220, 0.86);
+	}
+
+	.title {
+		font-size: 28px;
+		line-height: 1.12;
+		letter-spacing: -0.02em;
+		color: rgba(255, 255, 255, 0.92);
+		font-weight: 650;
+	}
+
+	.titleRow {
+		display: inline-flex;
+		align-items: center;
+		gap: 10px;
+	}
+
+	.icon {
+		width: 18px;
+		height: 18px;
+		color: rgba(255, 255, 255, 0.7);
+		flex: 0 0 auto;
+	}
+
+	.desc {
+		color: rgba(255, 255, 255, 0.62);
+		font-size: 15px;
+		line-height: 1.55;
+		max-width: 60ch;
+	}
+
+	@media (min-width: 900px) {
+		.item {
+			padding: 22px 22px 18px;
+		}
+		.title {
+			font-size: 30px;
+		}
+	}
+</style>
+
+
