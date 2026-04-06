@@ -1,6 +1,7 @@
 ---
 import type { Lang } from '../i18n/strings';
 import LanguageSwitch from '../components/LanguageSwitch.astro';
+import VpnChat from '../components/VpnChat.astro';
 import { UI, t } from '../i18n/strings';
 
 const { lang, title } = Astro.props as { lang: Lang; title?: string };
@@ -46,7 +47,15 @@ const pageTitle = title ? `${title} — ${UI.brand}` : UI.brand;
 
 		<footer class="footer">
 			<div class="container footer__inner">
-				<div class="muted">© {new Date().getFullYear()} {UI.brand}</div>
+				<div class="footer__left">
+					<div class="muted">© {new Date().getFullYear()} {UI.brand}</div>
+					<div class="footer__version">
+						<span class="muted">{t(UI.footer.version, lang)} v.1.1</span>
+					</div>
+				</div>
+				<div class="footer__dev-badge">
+					<span class="dev-badge">{t(UI.footer.stable, lang)}</span>
+				</div>
 			</div>
 		</footer>
 
@@ -57,6 +66,8 @@ const pageTitle = title ? `${title} — ${UI.brand}` : UI.brand;
 				} catch (e) {}
 			})();
 		</script>
+		
+		<VpnChat lang={lang} />
 	</body>
 </html>
 
@@ -85,12 +96,23 @@ const pageTitle = title ? `${title} — ${UI.brand}` : UI.brand;
 		pointer-events: none;
 		z-index: 0;
 		background-image:
-			linear-gradient(to right, rgba(255, 255, 255, 0.06) 1px, transparent 1px),
-			linear-gradient(to bottom, rgba(255, 255, 255, 0.06) 1px, transparent 1px);
+			linear-gradient(to right, rgba(255, 255, 255, 0.12) 1px, transparent 1px),
+			linear-gradient(to bottom, rgba(255, 255, 255, 0.12) 1px, transparent 1px);
 		background-size: 120px 120px;
-		opacity: 0.35;
+		opacity: 0.6;
 		/* subtle vignette so the grid doesn't compete with content */
 		mask-image: radial-gradient(circle at 30% 10%, rgba(0, 0, 0, 0.85), rgba(0, 0, 0, 0.15) 55%, rgba(0, 0, 0, 0) 80%);
+		animation: gridWave 20s linear infinite;
+		background-position: 0 0, 0 0;
+	}
+
+	@keyframes gridWave {
+		0% {
+			background-position: 0 0, 0 0;
+		}
+		100% {
+			background-position: 120px 120px, 120px 120px;
+		}
 	}
 
 	:global(body)::after {
@@ -99,8 +121,11 @@ const pageTitle = title ? `${title} — ${UI.brand}` : UI.brand;
 		inset: 0;
 		pointer-events: none;
 		z-index: 0;
-		background: radial-gradient(circle at 20% 10%, rgba(255, 255, 255, 0.05), transparent 55%),
-			radial-gradient(circle at 80% 90%, rgba(255, 255, 255, 0.03), transparent 50%);
+		background: 
+			radial-gradient(circle at 20% 10%, rgba(255, 255, 255, 0.05), transparent 55%),
+			radial-gradient(circle at 80% 90%, rgba(255, 255, 255, 0.03), transparent 50%),
+			url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.15'/%3E%3C/svg%3E");
+		opacity: 0.3;
 	}
 
 	/* ensure content is above the background grid */
@@ -207,6 +232,10 @@ const pageTitle = title ? `${title} — ${UI.brand}` : UI.brand;
 			animation: none;
 			box-shadow: none;
 		}
+
+		:global(body)::before {
+			animation: none;
+		}
 	}
 
 	.main {
@@ -221,6 +250,38 @@ const pageTitle = title ? `${title} — ${UI.brand}` : UI.brand;
 		display: flex;
 		justify-content: space-between;
 		align-items: center;
+		gap: 16px;
+		flex-wrap: wrap;
+	}
+
+	.footer__left {
+		display: flex;
+		align-items: center;
+		gap: 16px;
+		flex-wrap: wrap;
+	}
+
+	.footer__version {
+		display: flex;
+		align-items: center;
+	}
+
+	.footer__dev-badge {
+		display: flex;
+		align-items: center;
+	}
+
+	.dev-badge {
+		display: inline-flex;
+		align-items: center;
+		padding: 6px 12px;
+		border-radius: 6px;
+		font-size: 12px;
+		font-weight: 500;
+		background: rgba(110, 255, 170, 0.1);
+		border: 1px solid rgba(110, 255, 170, 0.2);
+		color: rgba(185, 255, 220, 0.9);
+		letter-spacing: 0.02em;
 	}
 
 	.muted {

@@ -1,9 +1,12 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import { UI, t } from '../../i18n/strings';
+import { PROJECTS } from '../../content/projects';
 import TileCard from '../../components/TileCard.astro';
 
 const lang = 'ru' as const;
+const studioProjects = PROJECTS.filter((p) => p.origin === 'tea-agency');
+const rouletumProject = PROJECTS.find((p) => p.slug === 'rouletum-demo' || p.title.toLowerCase().includes('rouletum'));
 ---
 
 <BaseLayout lang={lang} title={t(UI.sections.tea, lang)}>
@@ -14,6 +17,7 @@ const lang = 'ru' as const;
 			description={{ ru: 'Мы делаем игры на стыке комфорта и тревожности.', en: 'We make games at the intersection of comfort and anxiety.' }}
 			href="https://tea-agency.itch.io/"
 			meta="itch.io"
+			image={{ src: '/TeaAgencyLogo2-export.gif', alt: 'Tea Agency Games logo', fit: 'contain', aspectRatio: '16 / 9', scale: 1.3 }}
 			lang={lang}
 		/>
 
@@ -26,8 +30,21 @@ const lang = 'ru' as const;
 			}}
 			href="https://store.steampowered.com/app/3344350/Rouletum/"
 			meta="Steam"
+			image={rouletumProject?.media?.cover ? { src: rouletumProject.media.cover.src, alt: t(rouletumProject.media.cover.alt, lang) } : undefined}
 			lang={lang}
 		/>
+
+		{studioProjects.map((p) => (
+			<TileCard
+				kind="project"
+				title={p.title}
+				description={p.summary}
+				href={p.links[0]?.href}
+				meta={p.tags?.[0]}
+				image={p.media?.cover ? { src: p.media.cover.src, alt: t(p.media.cover.alt, lang) } : undefined}
+				lang={lang}
+			/>
+		))}
 	</section>
 
 	<style>

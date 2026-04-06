@@ -25,6 +25,7 @@ const personalProjects = PROJECTS.filter((p) => p.origin !== 'tea-agency');
 					description={p.summary}
 					href={p.links[0]?.href}
 					meta={p.tags?.[0]}
+					image={p.media?.cover ? { src: p.media.cover.src, alt: t(p.media.cover.alt, lang) } : undefined}
 					lang={lang}
 				/>
 			))

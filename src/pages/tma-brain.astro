@@ -1,0 +1,53 @@
+---
+import BrainGraph from '../components/BrainGraph.tsx';
+
+// Эта страница рендерится без BaseLayout, чтобы занимать 100% экрана в Telegram (TMA)
+const pageTitle = "Brain Gamedesign (Zettelkasten)";
+---
+
+<!doctype html>
+<html lang="ru">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+		<title>{pageTitle}</title>
+		
+        <!-- Скрипт Telegram Web App -->
+        <script src="https://telegram.org/js/telegram-web-app.js"></script>
+        
+        <style>
+            html, body {
+                margin: 0;
+                padding: 0;
+                width: 100vw;
+                height: 100vh;
+                overflow: hidden; /* Запрещаем скролл, чтобы TMA не дергался */
+                background: #0b0e14; /* Темный фон сайта */
+                color-scheme: dark;
+                font-family: ui-sans-serif, system-ui, -apple-system, sans-serif;
+            }
+
+            #root {
+                width: 100%;
+                height: 100%;
+            }
+        </style>
+	</head>
+	<body>
+        <!-- Сообщаем Telegram, что приложение готово (скрываем загрузочный экран) -->
+        <script>
+            if (window.Telegram && window.Telegram.WebApp) {
+                window.Telegram.WebApp.ready();
+                window.Telegram.WebApp.expand(); // Открываем на весь экран
+                
+                // Настраиваем цвета шапки в цвет нашего фона
+                window.Telegram.WebApp.setHeaderColor('#0b0e14');
+                window.Telegram.WebApp.setBackgroundColor('#0b0e14');
+            }
+        </script>
+
+		<div id="root">
+            <BrainGraph client:only="react" isTma={true} />
+		</div>
+	</body>
+</html>

@@ -2,10 +2,12 @@
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import { UI, t } from '../../i18n/strings';
 import { SOCIAL_LINKS } from '../../content/socials';
+import { PROJECTS } from '../../content/projects';
 import TileCard from '../../components/TileCard.astro';
 import TileStack2 from '../../components/TileStack2.astro';
 
 const lang = 'ru' as const;
+const rouletumProject = PROJECTS.find((p) => p.slug === 'rouletum-demo' || p.title.toLowerCase().includes('rouletum'));
 const socialPairs = Array.from({ length: Math.ceil(SOCIAL_LINKS.length / 2) }, (_, i) => [
 	SOCIAL_LINKS[i * 2],
 	SOCIAL_LINKS[i * 2 + 1],
@@ -16,7 +18,7 @@ const socialPairs = Array.from({ length: Math.ceil(SOCIAL_LINKS.length / 2) }, (
 	<section class="intro">
 		<div class="intro__row">
 			<h1 class="h1">
-				Привет, я {UI.brand},
+				Привет, я <span class="brand">{UI.brand}</span>,
 				<br />
 				<span class="h1__sub">{t(UI.hero.title, lang)}.</span>
 			</h1>
@@ -46,6 +48,7 @@ const socialPairs = Array.from({ length: Math.ceil(SOCIAL_LINKS.length / 2) }, (
 			description={{ ru: 'Мы делаем игры на стыке комфорта и тревожности.', en: 'We make games at the intersection of comfort and anxiety.' }}
 			href="https://tea-agency.itch.io/"
 			meta="itch.io"
+			image={{ src: '/TeaAgencyLogo2-export.gif', alt: 'Tea Agency Games logo', fit: 'contain', aspectRatio: '16 / 9', scale: 1.3 }}
 			lang={lang}
 		/>
 
@@ -53,34 +56,61 @@ const socialPairs = Array.from({ length: Math.ceil(SOCIAL_LINKS.length / 2) }, (
 			kind="project"
 			title="Rouletum"
 			description={{
-				ru: 'Рогалик на основе рулетки с щепоткой сверхъестественного: ставки, мистические сигилы и путь наверх в казино Rouletum.',
+				ru: 'Roulette‑based roguelike с щепоткой сверхъестественного: делай ставки, используй “подпольные” фишки и мистические сигилы, чтобы подняться на вершину казино Rouletum.',
 				en: 'Roulette-based rogue-like with a bit of supernatural. Place your bets, use mystical sigils, and climb the Rouletum Casino.',
 			}}
 			href="https://store.steampowered.com/app/3344350/Rouletum/"
 			meta="Steam"
+			image={rouletumProject?.media?.cover ? { src: rouletumProject.media.cover.src, alt: t(rouletumProject.media.cover.alt, lang) } : undefined}
 			lang={lang}
 		/>
 
 		<TileCard
-			kind="link"
-			title="Резюме"
-			description={{ ru: 'Опыт, навыки, инструменты — коротко и структурно.', en: 'Experience, skills, tools — structured and short.' }}
-			href={`/${lang}/resume`}
+			kind="project"
+			title="Poligorn Connect"
+			description={{ ru: 'VPN-сервис для безопасного и приватного интернета.', en: 'VPN service for secure and private internet.' }}
+			href="#vpn-chat"
+			meta="Chat"
+			image={{ src: '/Syntx%20AI%20Image%20(2).png', alt: 'Poligorn Connect' }}
 			lang={lang}
 		/>
 
-		{socialPairs.map(([a, b]) => (
-			<TileStack2
-				class="socialStack"
-				top={{ title: t(a.label, lang), description: { ru: 'Внешняя ссылка', en: 'External link' }, href: a.href, icon: a.key }}
-				bottom={
-					b
-						? { title: t(b.label, lang), description: { ru: 'Внешняя ссылка', en: 'External link' }, href: b.href, icon: b.key }
-						: undefined
-				}
+		<TileCard
+			class="brain-tile"
+			kind="project"
+			title="Brain Gamedesign"
+			description={{ ru: 'Zettelkasten-база знаний по геймдизайну в виде интерактивного графа.', en: 'Zettelkasten knowledge base for game design as an interactive graph.' }}
+			href={`/${lang}/brain`}
+			meta="Knowledge Base"
+			image={{ src: '/BGCapsule.png', alt: 'Brain Gamedesign', fit: 'cover' }}
+			lang={lang}
+		/>
+
+		<div class="socials-column">
+			<TileCard
+				class="resume-tile"
+				kind="link"
+				title="Резюме"
+				description={{ ru: 'Опыт, навыки, инструменты — скачайте в PDF.', en: 'Experience, skills, tools — download as PDF.' }}
+				href="/JGD Резюме.pdf"
+				icon="download"
+				download={true}
 				lang={lang}
 			/>
-		))}
+
+			{socialPairs.map(([a, b]) => (
+				<TileStack2
+					class="socialStack"
+					top={{ title: t(a.label, lang), description: a.description, href: a.href, icon: a.key }}
+					bottom={
+						b
+							? { title: t(b.label, lang), description: b.description, href: b.href, icon: b.key }
+							: undefined
+					}
+					lang={lang}
+				/>
+			))}
+		</div>
 	</section>
 </BaseLayout>
 
@@ -107,6 +137,11 @@ const socialPairs = Array.from({ length: Math.ceil(SOCIAL_LINKS.length / 2) }, (
 		font-weight: 600;
 	}
 
+	.brand {
+		color: rgba(185, 255, 220, 0.95);
+		text-shadow: 0 0 14px rgba(110, 255, 170, 0.12);
+	}
+
 	.p {
 		margin: 0;
 		max-width: 76ch;
@@ -126,11 +161,28 @@ const socialPairs = Array.from({ length: Math.ceil(SOCIAL_LINKS.length / 2) }, (
 		height: 100%;
 		object-fit: cover;
 		image-rendering: pixelated;
+		transition: transform 180ms ease, filter 180ms ease;
+		transform-origin: 50% 55%;
 	}
 
 	.avatarWrap {
 		display: grid;
 		justify-items: end;
+	}
+
+	.avatarWrap:hover .avatar__img {
+		transform: rotate(-1.5deg) scale(1.06);
+		filter: drop-shadow(0 12px 24px rgba(0, 0, 0, 0.35)) saturate(1.05);
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.avatar__img {
+			transition: none;
+		}
+		.avatarWrap:hover .avatar__img {
+			transform: none;
+			filter: none;
+		}
 	}
 
 	@media (max-width: 520px) {
@@ -147,9 +199,36 @@ const socialPairs = Array.from({ length: Math.ceil(SOCIAL_LINKS.length / 2) }, (
 		gap: 0;
 	}
 
-	/* Держим соц‑плитки в последней (правой) колонке, чтобы LinkedIn/YouTube не уезжали влево */
-	.grid :global(.socialStack) {
-		grid-column: -1;
+	/* Колонка с резюме и соцсетями */
+	.socials-column {
+		display: flex;
+		flex-direction: column;
+		min-height: 0;
+	}
+
+	/* Блок резюме — жёлтый акцент, по прозрачности как соц-кнопки */
+	.grid :global(.resume-tile) {
+		min-height: 110px;
+		border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+		background: linear-gradient(135deg, rgba(255, 193, 7, 0.08) 0%, rgba(255, 193, 7, 0.03) 100%);
+	}
+
+	/* Держим соц‑плитки в колонке */
+	.socials-column :global(.socialStack) {
+		flex: 1;
+		min-height: 110px;
+	}
+
+	/* Desktop layout: 3 проекта + колонка справа в один ряд */
+	@media (min-width: 980px) {
+		.grid {
+			grid-template-columns: repeat(3, minmax(260px, 1fr)) minmax(260px, 1fr);
+		}
+
+		.socials-column {
+			grid-column: 4;
+			grid-row: 1 / span 2;
+		}
 	}
 </style>
 

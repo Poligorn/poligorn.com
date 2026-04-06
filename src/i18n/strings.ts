@@ -28,12 +28,16 @@ export const UI = {
 		hi: { ru: 'Привет, я', en: "Hi, I'm" },
 		title: { ru: 'Разработчик игр', en: 'Game Developer' },
 		subtitle: {
-			ru: 'Проекты с Itch.io, резюме и работа студии Tea Agency Games.',
-			en: 'Itch.io projects, resume, and Tea Agency Games studio work.',
+			ru: 'Разрабатываю игры и графику, обучаю детей программированию и занимаюсь продвижением игр.',
+			en: 'I build games and visuals, teach kids programming, and help games find their audience.',
 		},
 		ctaProjects: { ru: 'Смотреть проекты', en: 'View projects' },
 		ctaContact: { ru: 'Контакты', en: 'Contact' },
 		ctaStudio: { ru: 'Проекты студии', en: 'Studio projects' },
+	},
+	resume: {
+		backHome: { ru: 'На главную', en: 'Back home' },
+		downloadCv: { ru: 'Скачать CV', en: 'Download CV' },
 	},
 	sections: {
 		projects: { ru: 'Проекты', en: 'Projects' },
@@ -51,9 +55,12 @@ export const UI = {
 			en: "More projects and experiences are always on the way. Let's keep in touch!",
 		},
 		connect: { ru: 'Связаться', en: 'Connect' },
+		version: { ru: 'Версия', en: 'Version' },
+		stable: { ru: 'Сайт стабильно работает', en: 'Website is stable' },
 	},
 	timeline: {
 		career: { ru: 'Карьера', en: 'Career' },
+		title: { ru: 'Опыт работы', en: 'Work Experience' },
 		current: { ru: 'по настоящее время', en: 'present' },
 		months: { ru: 'мес.', en: 'mo' },
 		years: { ru: 'лет', en: 'y' },

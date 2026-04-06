@@ -1,0 +1,11 @@
+Poligorn — CV (placeholder)
+
+This file is a temporary placeholder for the “Download CV” button.
+Replace it with your actual PDF later (e.g. public/Poligorn_CV.pdf) and update the link.
+
+Experience:
+- Tea Agency Games — Producer, Game Designer (May 2024 — present)
+- Glera Games — Technical Game Designer (Aug 2024 — Nov 2024)
+- Softintermob LLC — Game Designer (Aug 2025 — Jan 2026)
+- Obelisk Interactive — Game Designer (Sep 2020 — Nov 2021)
+

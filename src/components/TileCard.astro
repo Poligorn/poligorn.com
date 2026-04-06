@@ -1,25 +1,48 @@
 ---
 import type { Lang, I18nText } from '../i18n/strings';
 import { t } from '../i18n/strings';
-import PlatformIcon from './PlatformIcon.astro';
 
 export type TileKind = 'project' | 'studio' | 'acquired' | 'link';
 
-const { kind, title, description, href, meta, lang } = Astro.props as {
+const { kind, title, description, href, meta, lang, class: className, image, icon, download } = Astro.props as {
 	kind: TileKind;
 	title: string;
 	description: I18nText;
 	href?: string;
 	meta?: string;
 	lang: Lang;
+	class?: string;
+	image?: {
+		src: string;
+		alt: string;
+		/** default: 'cover' */
+		fit?: 'cover' | 'contain';
+		/** default: '16 / 9' */
+		aspectRatio?: string;
+		/** default: '50% 50%' */
+		position?: string;
+		/** default: 1 */
+		scale?: number;
+	};
+	/** Optional leading icon (vector) */
+	icon?: 'resume' | 'download' | 'back';
+	/** Make link downloadable */
+	download?: boolean;
 };
 
 const isExternal = href?.startsWith('http');
-const platform =
-	meta?.toLowerCase() === 'steam' ? ('steam' as const) : meta?.toLowerCase() === 'itch.io' ? ('itch' as const) : null;
+
+const iconPath =
+	icon === 'resume'
+		? 'M7 2.75A2.75 2.75 0 0 0 4.25 5.5v13A2.75 2.75 0 0 0 7 21.25h10A2.75 2.75 0 0 0 19.75 18.5v-10a.75.75 0 0 0-.22-.53l-5-5a.75.75 0 0 0-.53-.22H7Zm7.5 1.94 3.31 3.31H14.5V4.69ZM7.75 11a.75.75 0 0 1 .75-.75h7a.75.75 0 0 1 0 1.5h-7A.75.75 0 0 1 7.75 11Zm0 4a.75.75 0 0 1 .75-.75h7a.75.75 0 0 1 0 1.5h-7a.75.75 0 0 1-.75-.75Z'
+		: icon === 'download'
+			? 'M12 2.75a.75.75 0 0 1 .75.75v8.69l2.72-2.72a.75.75 0 1 1 1.06 1.06l-4 4a.75.75 0 0 1-1.06 0l-4-4a.75.75 0 1 1 1.06-1.06l2.72 2.72V3.5a.75.75 0 0 1 .75-.75ZM5.75 19a.75.75 0 0 1 .75-.75h11a.75.75 0 0 1 0 1.5h-11A.75.75 0 0 1 5.75 19Z'
+			: icon === 'back'
+				? 'M10.47 6.47a.75.75 0 0 1 0 1.06L7.06 10.94H20a.75.75 0 0 1 0 1.5H7.06l3.41 3.41a.75.75 0 1 1-1.06 1.06l-4.7-4.7a.75.75 0 0 1 0-1.06l4.7-4.7a.75.75 0 0 1 1.06 0Z'
+				: null;
 ---
 
-<article class="tile">
+<article class={`tile${className ? ` ${className}` : ''}`}>
 	<span class={`pill pill--${kind}`}>
 		{kind === 'project'
 			? 'project'
@@ -30,24 +53,49 @@ const platform =
 					: 'link'}
 	</span>
 
+{image && (
+	<div
+		class={`tile__image${image.fit === 'contain' ? ' tile__image--contain' : ''}`}
+		style={`--tile-image-aspect:${image.aspectRatio ?? '16 / 9'};--tile-image-position:${image.position ?? '50% 50%'};--tile-image-scale:${image.scale ?? 1};`}
+	>
+		<img src={image.src} alt={image.alt} loading="lazy" decoding="async" />
+	</div>
+)}
+
 	{href ? (
 		<a
 			class="tile__title"
 			href={href}
 			target={isExternal ? '_blank' : undefined}
 			rel={isExternal ? 'noreferrer noopener' : undefined}
+			download={download}
 		>
-			{title}
+			<span class="tile__titleRow">
+				{iconPath ? (
+					<svg class="tile__titleIcon" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" focusable="false">
+						<path fill="currentColor" d={iconPath} />
+					</svg>
+				) : null}
+				<span class="tile__titleText">{title}</span>
+			</span>
 		</a>
 	) : (
-		<div class="tile__title">{title}</div>
+		<div class="tile__title">
+			<span class="tile__titleRow">
+				{iconPath ? (
+					<svg class="tile__titleIcon" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" focusable="false">
+						<path fill="currentColor" d={iconPath} />
+					</svg>
+				) : null}
+				<span class="tile__titleText">{title}</span>
+			</span>
+		</div>
 	)}
 
 	<p class="tile__desc">{t(description, lang)}</p>
 
 	{meta ? (
 		<div class="tile__meta">
-			{platform ? <PlatformIcon name={platform} class="tile__metaIcon" /> : null}
 			<span>{meta}</span>
 		</div>
 	) : null}
@@ -87,9 +135,9 @@ const platform =
 	}
 
 	.pill--studio {
-		border-color: rgba(110, 255, 170, 0.18);
-		background: rgba(110, 255, 170, 0.06);
-		color: rgba(185, 255, 220, 0.86);
+		border-color: rgba(90, 170, 255, 0.25);
+		background: rgba(90, 170, 255, 0.08);
+		color: rgba(195, 225, 255, 0.9);
 	}
 
 	.pill--acquired {
@@ -113,6 +161,24 @@ const platform =
 		font-weight: 650;
 	}
 
+	.tile__titleRow {
+		display: inline-flex;
+		align-items: center;
+		gap: 10px;
+	}
+
+	.tile__titleIcon {
+		width: 18px;
+		height: 18px;
+		opacity: 0.75;
+		flex: 0 0 auto;
+	}
+
+	.tile__titleText {
+		display: inline-block;
+		min-width: 0;
+	}
+
 	a.tile__title:hover {
 		text-decoration: underline;
 		text-decoration-color: rgba(255, 255, 255, 0.25);
@@ -123,6 +189,35 @@ const platform =
 		outline: 2px solid rgba(130, 190, 255, 0.9);
 		outline-offset: 4px;
 		border-radius: 10px;
+	}
+
+	.tile__image {
+		width: 100%;
+		aspect-ratio: var(--tile-image-aspect, 16 / 9);
+		border-radius: 6px;
+		overflow: hidden;
+		margin-bottom: 10px;
+		background: rgba(255, 255, 255, 0.03);
+	}
+
+	.tile__image img {
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+		object-position: var(--tile-image-position, 50% 50%);
+		transform: scale(var(--tile-image-scale, 1));
+		transform-origin: 50% 50%;
+		display: block;
+	}
+
+	.tile__image--contain img {
+		object-fit: contain;
+		padding: 12px;
+		background: transparent;
+	}
+
+	.tile__image--contain {
+		background: #000;
 	}
 
 	.tile__desc {
@@ -143,9 +238,11 @@ const platform =
 	}
 
 	.tile__metaIcon {
-		width: 18px;
-		height: 18px;
-		opacity: 0.4;
+		width: 20px;
+		height: 20px;
+		aspect-ratio: 1 / 1;
+		display: block;
+		opacity: 0.72;
 		flex: 0 0 auto;
 	}
 

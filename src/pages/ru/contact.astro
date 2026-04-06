@@ -16,10 +16,10 @@ const socialPairs = Array.from({ length: Math.ceil(SOCIAL_LINKS.length / 2) }, (
 		{socialPairs.map(([a, b]) => (
 			<TileStack2
 				class="socialStack"
-				top={{ title: t(a.label, lang), description: { ru: 'Внешняя ссылка', en: 'External link' }, href: a.href, icon: a.key }}
+					top={{ title: t(a.label, lang), description: a.description, href: a.href, icon: a.key }}
 				bottom={
 					b
-						? { title: t(b.label, lang), description: { ru: 'Внешняя ссылка', en: 'External link' }, href: b.href, icon: b.key }
+							? { title: t(b.label, lang), description: b.description, href: b.href, icon: b.key }
 						: undefined
 				}
 				lang={lang}

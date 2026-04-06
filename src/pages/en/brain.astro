@@ -1,0 +1,69 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import BrainGraph from '../../components/BrainGraph.tsx';
+
+// СSS-хак для Astro, так как React компонент рендерится на клиенте
+---
+
+<BaseLayout lang="en" title="Brain Gamedesign">
+	<div class="header-section">
+		<h1>Knowledge Base</h1>
+		<p class="subtitle">Zettelkasten visualization of posts from the Telegram channel <a href="https://t.me/Brain_Gamedesign" target="_blank" rel="noopener noreferrer">@Brain_Gamedesign</a></p>
+	</div>
+
+	<div class="graph-container">
+        <!-- client:only="react" is required for ForceGraph because it uses window/canvas which fails in SSR -->
+		<BrainGraph client:only="react" isTma={false} lang="en" />
+	</div>
+
+    <div class="footer-note">
+        <p>Each node represents a thought or post. Connections are built automatically based on hashtags. Click a post node (blue) to read the original in Telegram.</p>
+    </div>
+</BaseLayout>
+
+<style>
+	.header-section {
+		margin-bottom: 30px;
+	}
+
+	h1 {
+		font-size: 42px;
+		margin: 0 0 10px;
+		line-height: 1.1;
+		color: rgba(255, 255, 255, 0.95);
+	}
+
+	.subtitle {
+		font-size: 18px;
+		color: rgba(255, 255, 255, 0.6);
+		margin: 0;
+	}
+
+	.subtitle a {
+		color: rgba(90, 170, 255, 0.9);
+		text-decoration: none;
+	}
+    .subtitle a:hover {
+        text-decoration: underline;
+    }
+
+	.graph-container {
+		width: 100%;
+		border-radius: 12px;
+		overflow: hidden;
+		box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+		margin-bottom: 40px;
+        min-height: 600px;
+        position: relative;
+        background: #0b0e14;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+	}
+
+    .footer-note {
+        text-align: center;
+        color: rgba(255, 255, 255, 0.4);
+        font-size: 14px;
+        max-width: 600px;
+        margin: 0 auto 60px;
+    }
+</style>

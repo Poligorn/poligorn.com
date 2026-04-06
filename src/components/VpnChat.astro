@@ -1,0 +1,570 @@
+---
+import { t, type Lang } from '../i18n/strings';
+
+const { lang } = Astro.props as { lang: Lang };
+
+const i18n = {
+	title: { ru: 'Poligorn Connect', en: 'Poligorn Connect' },
+	choiceTitle: { ru: 'Как вам удобнее связаться?', en: 'How would you like to connect?' },
+	websiteChat: { ru: 'Чат на сайте', en: 'Website Chat' },
+	telegramChat: { ru: 'Перейти в Telegram', en: 'Open Telegram' },
+	connecting: { ru: 'Подключение к защищенному чату...', en: 'Connecting to secure chat...' },
+	connected: { ru: 'Вы в чате. Напишите ваш вопрос!', en: 'You are in the chat. Write your question!' },
+    hint: { ru: 'Подсказка: напишите нам, если хотите приобрести подписку на сервис.', en: 'Hint: text us if you want to purchase a subscription for the service.' },
+	typeMessage: { ru: 'Введите сообщение...', en: 'Type your message...' },
+	send: { ru: 'Отправить', en: 'Send' },
+	close: { ru: 'Закрыть', en: 'Close' },
+    adminName: { ru: 'Поддержка', en: 'Support' }
+};
+---
+
+<div id="vpn-chat-overlay" class="chat-overlay" aria-hidden="true" data-lang={lang}>
+	<div class="chat-container">
+		<header class="chat-header">
+			<div class="chat-title">
+				<span class="status-dot" id="chat-status-dot" style="display: none;"></span>
+				{t(i18n.title, lang)}
+			</div>
+			<button id="vpn-chat-close" class="chat-close" aria-label={t(i18n.close, lang)}>
+				<svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2" fill="none">
+					<line x1="18" y1="6" x2="6" y2="18"></line>
+					<line x1="6" y1="6" x2="18" y2="18"></line>
+				</svg>
+			</button>
+		</header>
+
+		<!-- Выбор способа связи -->
+		<div id="vpn-choice-view" class="choice-view">
+			<p class="choice-title">{t(i18n.choiceTitle, lang)}</p>
+			<div class="choice-buttons">
+				<a href="https://t.me/Poligorn_Connect" target="_blank" rel="noreferrer noopener" class="choice-btn choice-telegram" id="btn-telegram">
+					<svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path fill="currentColor" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69.01-.03.01-.14-.07-.19-.08-.05-.19-.02-.27 0-.11.03-1.84 1.18-5.2 3.45-.49.34-.94.5-1.35.49-.45-.01-1.3-.25-1.94-.46-.78-.26-1.41-.4-1.35-.85.03-.23.36-.47.99-.71 3.89-1.69 6.48-2.81 7.78-3.35 3.69-1.54 4.46-1.81 4.96-1.82.11 0 .35.03.48.14.11.09.14.22.15.34-.01.07-.01.16-.02.27z"/></svg>
+					{t(i18n.telegramChat, lang)}
+				</a>
+				<button id="btn-internal-chat" class="choice-btn choice-internal">
+					<svg viewBox="0 0 24 24" width="22" height="22" stroke="currentColor" stroke-width="2" fill="none"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>
+					{t(i18n.websiteChat, lang)}
+				</button>
+			</div>
+		</div>
+
+		<!-- Внутренний чат -->
+		<div id="vpn-chat-view" class="chat-view" style="display: none;">
+			<div id="vpn-chat-messages" class="chat-messages">
+				<div class="chat-message system" id="chat-status-msg">
+					<div class="chat-bubble">{t(i18n.connecting, lang)}</div>
+				</div>
+			</div>
+
+			<form id="vpn-chat-form" class="chat-form">
+				<input 
+					type="text" 
+					id="vpn-chat-input" 
+					class="chat-input" 
+					placeholder={t(i18n.typeMessage, lang)} 
+					autocomplete="off"
+					disabled
+					required 
+				/>
+				<button type="submit" class="chat-send" id="vpn-chat-send" disabled>
+					{t(i18n.send, lang)}
+				</button>
+			</form>
+		</div>
+	</div>
+</div>
+
+<style>
+	.chat-overlay {
+		position: fixed;
+		top: 0;
+		left: 0;
+		width: 100vw;
+		height: 100vh;
+		background: rgba(0, 0, 0, 0.85);
+		backdrop-filter: blur(8px);
+		-webkit-backdrop-filter: blur(8px);
+		z-index: 9999;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		opacity: 0;
+		pointer-events: none;
+		transition: opacity 0.2s ease;
+	}
+
+	.chat-overlay.is-open {
+		opacity: 1;
+		pointer-events: auto;
+	}
+
+	.chat-container {
+		width: 100%;
+		max-width: 600px;
+		height: 100%;
+		max-height: 800px;
+		background: #0a0a0a;
+		border: 1px solid rgba(255, 255, 255, 0.08);
+		display: flex;
+		flex-direction: column;
+		box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+	}
+
+	@media (min-width: 640px) {
+		.chat-container {
+			height: 90vh;
+			border-radius: 12px;
+		}
+	}
+
+	.chat-header {
+		padding: 16px 20px;
+		border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		background: rgba(255, 255, 255, 0.02);
+	}
+
+	.chat-title {
+		font-size: 16px;
+		font-weight: 600;
+		color: rgba(255, 255, 255, 0.9);
+		display: flex;
+		align-items: center;
+		gap: 10px;
+	}
+
+	.status-dot {
+		width: 8px;
+		height: 8px;
+		border-radius: 50%;
+		background: #ffaa00; /* yellow for connecting */
+		box-shadow: 0 0 8px rgba(255, 170, 0, 0.5);
+	}
+
+    .status-dot.connected {
+        background: #00ff88;
+        box-shadow: 0 0 8px rgba(0, 255, 136, 0.5);
+    }
+
+	.chat-close {
+		background: none;
+		border: none;
+		color: rgba(255, 255, 255, 0.5);
+		cursor: pointer;
+		padding: 4px;
+		border-radius: 4px;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		transition: color 0.15s, background 0.15s;
+	}
+
+	.chat-close:hover {
+		color: white;
+		background: rgba(255, 255, 255, 0.1);
+	}
+
+	.choice-view {
+		flex: 1;
+		display: flex;
+		flex-direction: column;
+		justify-content: center;
+		align-items: center;
+		padding: 40px 20px;
+		text-align: center;
+	}
+
+	.choice-title {
+		font-size: 20px;
+		font-weight: 600;
+		color: rgba(255, 255, 255, 0.9);
+		margin: 0 0 30px;
+	}
+
+	.choice-buttons {
+		display: flex;
+		flex-direction: column;
+		gap: 16px;
+		width: 100%;
+		max-width: 320px;
+	}
+
+	.choice-btn {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: 12px;
+		width: 100%;
+		padding: 16px 20px;
+		border-radius: 8px;
+		font-size: 16px;
+		font-weight: 600;
+		text-decoration: none;
+		cursor: pointer;
+		transition: transform 0.15s, background 0.15s, box-shadow 0.15s;
+		border: 1px solid transparent;
+	}
+
+	.choice-btn:active {
+		transform: scale(0.98);
+	}
+
+	.choice-telegram {
+		background: #2AABEE;
+		color: white;
+		box-shadow: 0 4px 12px rgba(42, 171, 238, 0.2);
+	}
+
+	.choice-telegram:hover {
+		background: #229ED9;
+		box-shadow: 0 6px 16px rgba(42, 171, 238, 0.3);
+	}
+
+	.choice-internal {
+		background: rgba(255, 255, 255, 0.05);
+		color: rgba(255, 255, 255, 0.9);
+		border: 1px solid rgba(255, 255, 255, 0.1);
+	}
+
+	.choice-internal:hover {
+		background: rgba(255, 255, 255, 0.1);
+		border-color: rgba(255, 255, 255, 0.2);
+	}
+
+	.chat-view {
+		flex: 1;
+		display: flex;
+		flex-direction: column;
+		min-height: 0;
+	}
+
+	.chat-messages {
+		flex: 1;
+		padding: 20px;
+		overflow-y: auto;
+		display: flex;
+		flex-direction: column;
+		gap: 12px;
+	}
+
+	.chat-message {
+		display: flex;
+		flex-direction: column;
+		max-width: 85%;
+	}
+
+	.chat-message.user {
+		align-self: flex-end;
+		align-items: flex-end;
+	}
+
+	.chat-message.admin {
+		align-self: flex-start;
+		align-items: flex-start;
+	}
+
+	.chat-message.system {
+		align-self: center;
+		align-items: center;
+		max-width: 100%;
+	}
+
+	.chat-bubble {
+		padding: 10px 14px;
+		border-radius: 8px;
+		font-size: 15px;
+		line-height: 1.4;
+		word-break: break-word;
+	}
+
+	.chat-message.user .chat-bubble {
+		background: rgba(255, 255, 255, 0.1);
+		color: white;
+		border-bottom-right-radius: 2px;
+	}
+
+	.chat-message.admin .chat-bubble {
+		background: rgba(90, 170, 255, 0.15);
+		color: rgba(255, 255, 255, 0.95);
+		border-bottom-left-radius: 2px;
+		border: 1px solid rgba(90, 170, 255, 0.2);
+	}
+
+	.chat-message.system .chat-bubble {
+		background: none;
+		color: rgba(255, 255, 255, 0.4);
+		font-size: 13px;
+		padding: 4px 0;
+	}
+
+    .chat-meta {
+        font-size: 11px;
+        color: rgba(255, 255, 255, 0.3);
+        margin-top: 4px;
+        margin-bottom: 2px;
+    }
+
+	.chat-form {
+		padding: 16px 20px;
+		border-top: 1px solid rgba(255, 255, 255, 0.08);
+		display: flex;
+		gap: 12px;
+		background: rgba(255, 255, 255, 0.02);
+	}
+
+	.chat-input {
+		flex: 1;
+		background: rgba(255, 255, 255, 0.05);
+		border: 1px solid rgba(255, 255, 255, 0.1);
+		border-radius: 6px;
+		padding: 0 14px;
+		color: white;
+		font-size: 15px;
+		outline: none;
+		transition: border-color 0.15s, background 0.15s;
+	}
+
+	.chat-input:focus {
+		border-color: rgba(255, 255, 255, 0.3);
+		background: rgba(255, 255, 255, 0.08);
+	}
+    .chat-input:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+
+	.chat-send {
+		background: rgba(255, 255, 255, 0.9);
+		color: black;
+		border: none;
+		padding: 0 18px;
+		border-radius: 6px;
+		font-weight: 600;
+		font-size: 14px;
+		cursor: pointer;
+		transition: background 0.15s, transform 0.1s;
+	}
+
+	.chat-send:hover:not(:disabled) {
+		background: white;
+	}
+
+	.chat-send:active:not(:disabled) {
+		transform: scale(0.97);
+	}
+
+    .chat-send:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+</style>
+
+<script>
+	import { createClient } from '@supabase/supabase-js';
+
+    let supabase;
+    let sessionId;
+    let isConnected = false;
+    let subscription;
+
+    const overlay = document.getElementById('vpn-chat-overlay');
+    const closeBtn = document.getElementById('vpn-chat-close');
+    const choiceView = document.getElementById('vpn-choice-view');
+    const chatView = document.getElementById('vpn-chat-view');
+    const btnTelegram = document.getElementById('btn-telegram');
+    const btnInternalChat = document.getElementById('btn-internal-chat');
+
+    const messagesContainer = document.getElementById('vpn-chat-messages');
+    const form = document.getElementById('vpn-chat-form');
+    const input = document.getElementById('vpn-chat-input');
+    const sendBtn = document.getElementById('vpn-chat-send');
+    const statusDot = document.getElementById('chat-status-dot');
+    const statusMsg = document.getElementById('chat-status-msg');
+
+    // Localized strings fallback
+    const isRu = overlay?.getAttribute('data-lang') === 'ru';
+    const msgConnected = isRu ? 'Вы в чате. Напишите ваш вопрос!' : 'You are in the chat. Write your question!';
+    const msgHint = isRu ? '💡 Подсказка: напишите нам, если хотите приобрести подписку на сервис.' : '💡 Hint: text us if you want to purchase a subscription for the service.';
+    const msgSupport = isRu ? 'Поддержка' : 'Support';
+    const msgYou = isRu ? 'Вы' : 'You';
+
+    // Initialize Supabase if keys exist
+    const supabaseUrl = import.meta.env.PUBLIC_SUPABASE_URL;
+    const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
+
+    if (supabaseUrl && supabaseAnonKey) {
+        supabase = createClient(supabaseUrl, supabaseAnonKey);
+    }
+
+    // Toggle overlay
+	document.addEventListener('click', (e) => {
+		const link = e.target.closest('a');
+		if (link && link.getAttribute('href') === '#vpn-chat') {
+			e.preventDefault();
+            openChat();
+		}
+	});
+
+    closeBtn?.addEventListener('click', () => {
+        overlay?.classList.remove('is-open');
+    });
+
+    btnTelegram?.addEventListener('click', () => {
+        overlay?.classList.remove('is-open');
+    });
+
+    btnInternalChat?.addEventListener('click', async () => {
+        choiceView.style.display = 'none';
+        chatView.style.display = 'flex';
+        statusDot.style.display = 'block';
+        if (!isConnected && supabase) {
+            await initChat();
+        } else if (!supabase) {
+            if (statusMsg) statusMsg.innerHTML = '<div class="chat-bubble" style="color:#ff6666;">Ошибка: Supabase не настроен (проверьте .env)</div>';
+        }
+    });
+
+    function getOrCreateSessionId() {
+        let id = localStorage.getItem('vpn_chat_session_id');
+        if (!id) {
+            id = crypto.randomUUID();
+            localStorage.setItem('vpn_chat_session_id', id);
+        }
+        return id;
+    }
+
+    function renderMessage(msg) {
+        const isUser = msg.sender === 'user';
+        const div = document.createElement('div');
+        div.className = `chat-message ${isUser ? 'user' : 'admin'}`;
+        
+        const meta = document.createElement('div');
+        meta.className = 'chat-meta';
+        meta.textContent = isUser ? msgYou : msgSupport;
+
+        const bubble = document.createElement('div');
+        bubble.className = 'chat-bubble';
+        bubble.textContent = msg.content;
+
+        div.appendChild(meta);
+        div.appendChild(bubble);
+        messagesContainer.appendChild(div);
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    }
+
+    async function initChat() {
+        if (!supabase) return;
+        sessionId = getOrCreateSessionId();
+
+        // Check/create session in DB
+        const { data: sessionData, error: sessionErr } = await supabase
+            .from('chat_sessions')
+            .select('id')
+            .eq('id', sessionId)
+            .single();
+
+        if (sessionErr && sessionErr.code === 'PGRST116') {
+            // Session doesn't exist, create it
+            await supabase.from('chat_sessions').insert([{ id: sessionId }]);
+        }
+
+        // Fetch old messages
+        const { data: messages } = await supabase
+            .from('messages')
+            .select('*')
+            .eq('session_id', sessionId)
+            .order('created_at', { ascending: true });
+
+        // Remove connecting status
+        if (statusMsg) statusMsg.style.display = 'none';
+
+        if (messages && messages.length > 0) {
+            messages.forEach(renderMessage);
+        } else {
+            // Show welcome messages
+            const welcome = document.createElement('div');
+            welcome.className = 'chat-message system';
+            welcome.innerHTML = `<div class="chat-bubble">${msgConnected}</div>`;
+            
+            const hint = document.createElement('div');
+            hint.className = 'chat-message system';
+            hint.innerHTML = `<div class="chat-bubble" style="opacity: 0.8; font-style: italic; margin-top: 4px;">${msgHint}</div>`;
+            
+            messagesContainer.appendChild(welcome);
+            messagesContainer.appendChild(hint);
+        }
+
+        // Subscribe to new messages
+        subscription = supabase.channel('chat_updates')
+            .on('postgres_changes', { 
+                event: 'INSERT', 
+                schema: 'public', 
+                table: 'messages', 
+                filter: `session_id=eq.${sessionId}` 
+            }, payload => {
+                const newMsg = payload.new;
+                // Avoid duplicating messages we just sent
+                if (newMsg.sender !== 'user') {
+                    renderMessage(newMsg);
+                }
+            })
+            .subscribe();
+
+        isConnected = true;
+        statusDot?.classList.add('connected');
+        input.disabled = false;
+        sendBtn.disabled = false;
+    }
+
+    async function openChat() {
+        overlay?.classList.add('is-open');
+        choiceView.style.display = 'flex';
+        chatView.style.display = 'none';
+        statusDot.style.display = 'none';
+    }
+
+    form?.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const content = input.value.trim();
+        if (!content || !isConnected || !supabase) return;
+
+        // Optimistic UI update
+        const tempMsg = { sender: 'user', content, created_at: new Date().toISOString() };
+        renderMessage(tempMsg);
+        input.value = '';
+
+        // Check if it's the first message in this session to send notification
+        const { count } = await supabase
+            .from('messages')
+            .select('*', { count: 'exact', head: true })
+            .eq('session_id', sessionId);
+
+        const isFirstMessage = count === 0;
+
+        // Insert to DB
+        await supabase.from('messages').insert([{
+            session_id: sessionId,
+            sender: 'user',
+            content: content
+        }]);
+
+        // Send email notification via Web3Forms if it's the first message
+        if (isFirstMessage) {
+            const web3formsKey = import.meta.env.PUBLIC_WEB3FORMS_KEY;
+            if (web3formsKey) {
+                const adminUrl = `${window.location.origin}/chat-admin?id=${sessionId}`;
+                fetch('https://api.web3forms.com/submit', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                    body: JSON.stringify({
+                        access_key: web3formsKey,
+                        subject: "Новый чат VPN на Poligorn.com",
+                        text: `Новый клиент начал чат по поводу VPN.\n\nСсылка для ответа: ${adminUrl}\n\nПервое сообщение клиента: ${content}`,
+                    })
+                }).catch(console.error);
+            }
+        }
+    });
+</script>

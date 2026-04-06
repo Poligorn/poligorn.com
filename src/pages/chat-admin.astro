@@ -1,0 +1,314 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { UI, t } from '../i18n/strings';
+
+// Language can default to ru for admin
+const lang = 'ru';
+---
+
+<BaseLayout lang={lang} title="VPN Chat Admin">
+	<div class="admin-container">
+		<h1>Управление чатом VPN</h1>
+		
+		<div id="admin-setup" class="setup-section">
+			<p>Введите ID сессии из письма, чтобы подключиться к чату:</p>
+			<form id="admin-setup-form" class="setup-form">
+				<input type="text" id="session-id-input" placeholder="Введите ID сессии (uuid)" required />
+				<button type="submit" class="btn">Подключиться</button>
+			</form>
+		</div>
+
+		<div id="admin-chat" class="chat-section" style="display: none;">
+			<div class="chat-header">
+				<h2>Чат с клиентом: <span id="display-session-id" style="font-size: 14px; opacity: 0.7;"></span></h2>
+			</div>
+			
+			<div id="admin-messages" class="chat-messages">
+				<!-- Сообщения появятся здесь -->
+			</div>
+
+			<form id="admin-chat-form" class="chat-form">
+				<input type="text" id="admin-chat-input" placeholder="Введите ваш ответ..." required />
+				<button type="submit" class="btn btn-primary">Отправить</button>
+			</form>
+		</div>
+	</div>
+</BaseLayout>
+
+<style>
+	.admin-container {
+		max-width: 800px;
+		margin: 40px auto;
+		padding: 0 20px;
+	}
+
+	h1 {
+		font-size: 32px;
+		margin-bottom: 24px;
+	}
+
+	.setup-section {
+		background: rgba(255, 255, 255, 0.05);
+		padding: 24px;
+		border-radius: 8px;
+		border: 1px solid rgba(255, 255, 255, 0.1);
+	}
+
+	.setup-form {
+		display: flex;
+		gap: 12px;
+		margin-top: 16px;
+	}
+
+	input {
+		flex: 1;
+		background: rgba(255, 255, 255, 0.05);
+		border: 1px solid rgba(255, 255, 255, 0.1);
+		padding: 10px 16px;
+		border-radius: 6px;
+		color: white;
+		font-size: 16px;
+	}
+
+	input:focus {
+		outline: none;
+		border-color: rgba(90, 170, 255, 0.5);
+	}
+
+	.btn {
+		background: rgba(255, 255, 255, 0.1);
+		color: white;
+		border: 1px solid rgba(255, 255, 255, 0.2);
+		padding: 10px 20px;
+		border-radius: 6px;
+		cursor: pointer;
+		font-size: 16px;
+		transition: all 0.2s;
+	}
+
+	.btn:hover {
+		background: rgba(255, 255, 255, 0.2);
+	}
+
+	.btn-primary {
+		background: rgba(90, 170, 255, 0.8);
+		border-color: transparent;
+		font-weight: 600;
+	}
+
+	.btn-primary:hover {
+		background: rgba(90, 170, 255, 1);
+	}
+
+	.chat-section {
+		background: rgba(0, 0, 0, 0.3);
+		border: 1px solid rgba(255, 255, 255, 0.1);
+		border-radius: 8px;
+		display: flex;
+		flex-direction: column;
+		height: 600px;
+		margin-top: 20px;
+	}
+
+	.chat-header {
+		padding: 16px 20px;
+		border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+	}
+
+	.chat-header h2 {
+		margin: 0;
+		font-size: 18px;
+	}
+
+	.chat-messages {
+		flex: 1;
+		overflow-y: auto;
+		padding: 20px;
+		display: flex;
+		flex-direction: column;
+		gap: 12px;
+	}
+
+	.chat-form {
+		padding: 16px 20px;
+		border-top: 1px solid rgba(255, 255, 255, 0.1);
+		display: flex;
+		gap: 12px;
+	}
+
+	/* Message Styles */
+	:global(.admin-msg-container) {
+		display: flex;
+		flex-direction: column;
+		max-width: 80%;
+	}
+	:global(.admin-msg-container.user) {
+		align-self: flex-start;
+	}
+	:global(.admin-msg-container.admin) {
+		align-self: flex-end;
+	}
+	:global(.admin-meta) {
+		font-size: 12px;
+		color: rgba(255, 255, 255, 0.4);
+		margin-bottom: 4px;
+	}
+	:global(.admin-msg-container.admin .admin-meta) {
+		align-self: flex-end;
+	}
+	:global(.admin-bubble) {
+		padding: 12px 16px;
+		border-radius: 8px;
+		font-size: 15px;
+		line-height: 1.4;
+	}
+	:global(.admin-msg-container.user .admin-bubble) {
+		background: rgba(255, 255, 255, 0.1);
+		border-bottom-left-radius: 2px;
+	}
+	:global(.admin-msg-container.admin .admin-bubble) {
+		background: rgba(90, 170, 255, 0.2);
+		border-bottom-right-radius: 2px;
+		border: 1px solid rgba(90, 170, 255, 0.3);
+	}
+</style>
+
+<script>
+	import { createClient } from '@supabase/supabase-js';
+
+	let supabase;
+	let currentSessionId = null;
+
+	const setupSection = document.getElementById('admin-setup');
+	const chatSection = document.getElementById('admin-chat');
+	const setupForm = document.getElementById('admin-setup-form');
+	const sessionInput = document.getElementById('session-id-input');
+	const displaySessionId = document.getElementById('display-session-id');
+	
+	const messagesContainer = document.getElementById('admin-messages');
+	const chatForm = document.getElementById('admin-chat-form');
+	const chatInput = document.getElementById('admin-chat-input');
+
+	// Init Supabase
+	const supabaseUrl = import.meta.env.PUBLIC_SUPABASE_URL;
+	const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
+
+	if (supabaseUrl && supabaseAnonKey) {
+		supabase = createClient(supabaseUrl, supabaseAnonKey);
+	} else {
+		alert("Ошибка: не заданы ключи Supabase в .env файле");
+	}
+
+	// Check URL for session ID
+	const urlParams = new URLSearchParams(window.location.search);
+	const urlSessionId = urlParams.get('id');
+	
+	if (urlSessionId && supabase) {
+		connectToSession(urlSessionId);
+	}
+
+	setupForm?.addEventListener('submit', (e) => {
+		e.preventDefault();
+		const id = sessionInput.value.trim();
+		if (id && supabase) {
+			// Update URL without reload
+			window.history.pushState({}, '', `?id=${id}`);
+			connectToSession(id);
+		}
+	});
+
+	function renderMessage(msg) {
+		const isUser = msg.sender === 'user';
+		
+		const div = document.createElement('div');
+		div.className = `admin-msg-container ${isUser ? 'user' : 'admin'}`;
+		
+		const meta = document.createElement('div');
+		meta.className = 'admin-meta';
+		meta.textContent = isUser ? 'Клиент' : 'Вы (Админ)';
+
+		const bubble = document.createElement('div');
+		bubble.className = 'admin-bubble';
+		bubble.textContent = msg.content;
+
+		div.appendChild(meta);
+		div.appendChild(bubble);
+		messagesContainer.appendChild(div);
+		messagesContainer.scrollTop = messagesContainer.scrollHeight;
+	}
+
+	async function connectToSession(sessionId) {
+		currentSessionId = sessionId;
+		displaySessionId.textContent = sessionId;
+		
+		setupSection.style.display = 'none';
+		chatSection.style.display = 'flex';
+		messagesContainer.innerHTML = '';
+
+		// Load old messages
+		const { data: messages, error } = await supabase
+			.from('messages')
+			.select('*')
+			.eq('session_id', sessionId)
+			.order('created_at', { ascending: true });
+
+		if (error) {
+			console.error("Error loading messages", error);
+			const errDiv = document.createElement('div');
+			errDiv.style.color = '#ff6666';
+			errDiv.textContent = 'Ошибка загрузки сообщений. Проверьте RLS политики.';
+			messagesContainer.appendChild(errDiv);
+			return;
+		}
+
+		if (messages && messages.length > 0) {
+			messages.forEach(renderMessage);
+		} else {
+			const empty = document.createElement('div');
+			empty.style.textAlign = 'center';
+			empty.style.color = 'rgba(255,255,255,0.5)';
+			empty.style.padding = '20px';
+			empty.textContent = 'Сообщений пока нет...';
+			empty.id = 'empty-state';
+			messagesContainer.appendChild(empty);
+		}
+
+		// Subscribe to real-time changes
+		supabase.channel('admin_chat_updates')
+			.on('postgres_changes', { 
+				event: 'INSERT', 
+				schema: 'public', 
+				table: 'messages', 
+				filter: `session_id=eq.${sessionId}` 
+			}, payload => {
+				const empty = document.getElementById('empty-state');
+				if (empty) empty.remove();
+				
+				const newMsg = payload.new;
+				if (newMsg.sender !== 'admin') {
+					renderMessage(newMsg);
+				}
+			})
+			.subscribe();
+	}
+
+	chatForm?.addEventListener('submit', async (e) => {
+		e.preventDefault();
+		const content = chatInput.value.trim();
+		if (!content || !currentSessionId || !supabase) return;
+
+		const empty = document.getElementById('empty-state');
+		if (empty) empty.remove();
+
+		// Optimistic UI
+		renderMessage({ sender: 'admin', content });
+		chatInput.value = '';
+
+		// Save to DB
+		await supabase.from('messages').insert([{
+			session_id: currentSessionId,
+			sender: 'admin',
+			content: content
+		}]);
+	});
+</script>
