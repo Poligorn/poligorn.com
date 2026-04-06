@@ -63,6 +63,7 @@ export default function BrainGraph({ isTma = false, lang = 'ru' }: { isTma?: boo
   const [showTags, setShowTags] = useState(false);
   
   const fgRef = useRef<any>();
+  const isFirstRender = useRef(true);
 
   // Fetch initial data
   const fetchData = async () => {
@@ -255,6 +256,18 @@ export default function BrainGraph({ isTma = false, lang = 'ru' }: { isTma?: boo
     }
   }, [isTma]);
 
+  // Center on HOME node after initial layout
+  const handleEngineStop = useCallback(() => {
+    if (isFirstRender.current && fgRef.current && displayData.nodes.length > 0) {
+      const homeNode: any = displayData.nodes.find((n: any) => n.id === '35' || n.group === 3);
+      if (homeNode && homeNode.x !== undefined && homeNode.y !== undefined) {
+        fgRef.current.centerAt(homeNode.x, homeNode.y, 1000);
+        fgRef.current.zoom(1.5, 1000);
+        isFirstRender.current = false;
+      }
+    }
+  }, [displayData.nodes]);
+
   return (
     <div style={{ width: '100%', height: isTma ? '100vh' : windowSize.height, background: '#0b0e14', position: 'relative', overflow: 'hidden', borderRadius: isTma ? '0' : '12px', border: isTma ? 'none' : '1px solid rgba(255,255,255,0.08)' }}>
       {/* Help Overlay */}
@@ -326,6 +339,7 @@ export default function BrainGraph({ isTma = false, lang = 'ru' }: { isTma?: boo
         linkColor={() => 'rgba(255, 255, 255, 0.15)'}
         linkWidth={1}
         onNodeClick={handleNodeClick}
+        onEngineStop={handleEngineStop}
         d3VelocityDecay={0.3} // smooth physics
         nodeLabel={(node: any) => {
           const safeName = node.name || '';
